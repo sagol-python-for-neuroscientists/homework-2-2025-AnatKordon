@@ -37,3 +37,15 @@ def english_to_morse(
         Name of output file containing the translated Morse code. Please don't change
         it since it's also hard-coded in the tests file.
     """
+    input_path = input_file #check if there's a difference between path and file
+    with open(input_path, "r") as file_object:
+        content = file_object.read()
+
+    output_path = output_file
+    with open(output_path, "a") as file_object: #appending lines to file
+        file_object.write(for word in input_file)
+
+
+    '''upper the input file to match dict
+    go over input file word by word
+    take every letter and convert in fict'''
