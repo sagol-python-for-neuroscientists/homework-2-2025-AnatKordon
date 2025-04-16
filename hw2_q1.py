@@ -18,49 +18,26 @@ MORSE_CODE = {'A': '.-',     'B': '-...',   'C': '-.-.',
               }
 
 
-# def english_to_morse(
-#     input_file: str = "lorem.txt",
-#     output_file: str = "lorem_morse.txt"
-# ):
-#     """Convert an input text file to an output Morse code file.
 
-#     Notes
-#     -----
-#     This function assumes the existence of a MORSE_CODE dictionary, containing a
-#     mapping between English letters and their corresponding Morse code.
+def english_to_morse(
+    input_file: str = "lorem.txt",
+    output_file: str = "lorem_morse.txt"
+):
+    """Convert an input text file to an output Morse code file.
 
-#     Parameters
-#     ----------
-#     input_file : str
-#         Path to file containing the text file to convert.
-#     output_file : str
-#         Name of output file containing the translated Morse code. Please don't change
-#         it since it's also hard-coded in the tests file.
-#     """
- 
-#     with open(input_file, "r") as input:
-#         content = input.read()
-#     print(content)
-#     upper_text = content.upper().split()
-#     #print(upper_text)
-#     upper_text2 = content.upper().split(' ')
-#     print(upper_text2)
+    Notes
+    -----
+    This function assumes the existence of a MORSE_CODE dictionary, containing a
+    mapping between English letters and their corresponding Morse code.
 
-#     output_string = ""
-#     for word in upper_text:
-#         new_word = ""
-#         for letter in word:
-#             if letter in MORSE_CODE:
-#                 new_word += MORSE_CODE[letter]    
-              
-#         output_string += new_word + '\n' 
-#         #print(output_string[0:82])
-
-#     with open(output_file, "w") as output: 
-#         output.write(output_string)
-#     return output_string
-
-def english_to_morse(input_file="lorem.txt", output_file="lorem_morse.txt"):
+    Parameters
+    ----------
+    input_file : str
+        Path to file containing the text file to convert.
+    output_file : str
+        Name of output file containing the translated Morse code. Please don't change
+        it since it's also hard-coded in the tests file.
+    """
     with open(input_file, "r") as input:
         content = input.read().upper()
 
@@ -72,9 +49,9 @@ def english_to_morse(input_file="lorem.txt", output_file="lorem_morse.txt"):
         words = paragraph.split()
         for word in words:
             morse_word = ""
-            for char in word:
-                if char in MORSE_CODE:
-                    morse_word += MORSE_CODE[char]
+            for letter in word:
+                # if letter in MORSE_CODE: #add raise error if letter isn't in morse because right now it can miss things
+                morse_word += MORSE_CODE[letter]
             output_lines.append(morse_word)
         output_lines.append("")  # empty line between paragraphs
 
@@ -85,31 +62,97 @@ def english_to_morse(input_file="lorem.txt", output_file="lorem_morse.txt"):
 
     return output_string
 
+
 output_string = english_to_morse(
     input_file = "lorem.txt",
     output_file = "lorem_morse.txt")
 
-###TESTS
 
-# # Reverse the dict to decode
-# MORSE_TO_ENG = {v: k for k, v in MORSE_CODE.items()}
+#####2nd attempt:
+import re
+def text_to_morse_lines(
+    input_file: str = "lorem.txt",
+    output_file: str = "lorem_morse1.txt"
+):
+    """Convert an input text file to an output Morse code file.
 
-# def decode_morse_word(morse_word):
-#     decoded = ""
-#     i = 0
-#     while i < len(morse_word):
-#         for j in range(len(morse_word), i, -1):
-#             chunk = morse_word[i:j]
-#             if chunk in MORSE_TO_ENG:
-#                 decoded += MORSE_TO_ENG[chunk]
-#                 i = j
-#                 break
-#         else:
-#             # No match found – something went wrong
-#             decoded += '?'
-#             i += 1
-#     return decoded
+    Notes
+    -----
+    This function assumes the existence of a MORSE_CODE dictionary, containing a
+    mapping between English letters and their corresponding Morse code.
 
-# word1 = decode_morse_word('.-....-.....-.---')
-# word2 = decode_morse_word('--.-.-.-..-..-...')
-# print(word1, word2)
+    Parameters
+    ----------
+    input_file : str
+        Path to file containing the text file to convert.
+    output_file : str
+        Name of output file containing the translated Morse code. Please don't change
+        it since it's also hard-coded in the tests file.
+    """
+    with open(input_file, "r") as input:
+        content = input.read().upper()
+
+    
+    # Split on words AND capture the empty lines (double newlines)
+    parts = re.split(r'(\s+)', content)  # splits by a single space - to seperate words, and also double space for paragraphs
+    morse_lines = []
+
+    for part in parts:
+        if part.isspace(): 
+            if '\n' in part:
+                # If it contains a newline, treat it as a paragraph break
+                morse_lines.append('')
+        elif part:  # non-empty word
+            morse_word = ''.join(MORSE_CODE.get(c, '') for c in part) #turning english chars to morse code
+            morse_lines.append(morse_word)
+
+    output_string = '\n'.join(morse_lines)
+    
+    with open(output_file, "w") as output:
+        output.write(output_string)
+
+    return output_string
+
+output_string_2 = text_to_morse_lines(
+    input_file = "lorem.txt",
+    output_file = "lorem_morse1.txt")
+
+###3rd attempt without for:
+def translate_to_morse(
+    input_file: str = "lorem.txt",
+    output_file: str = "lorem_morse2.txt"
+):
+    """Convert an input text file to an output Morse code file.
+
+    Notes
+    -----
+    This function assumes the existence of a MORSE_CODE dictionary, containing a
+    mapping between English letters and their corresponding Morse code.
+
+    Parameters
+    ----------
+    input_file : str
+        Path to file containing the text file to convert.
+    output_file : str
+        Name of output file containing the translated Morse code. Please don't change
+        it since it's also hard-coded in the tests file.
+    """
+    with open(input_file, "r") as input:
+        content = input.read().upper()
+
+
+    trans_table = str.maketrans(MORSE_CODE)
+    translated = content.translate(trans_table)
+    temp_text = re.sub(r'\n\n+', '<break>', translated) #replace double newlines with a placeholder for them to differ from the spaces between words in next line from 
+    temp_text = re.sub(r'\s+', '\n', temp_text)
+    output_string = temp_text.replace('<break>', '\n\n') #put back double newlinws
+
+    with open(output_file, "w") as output:
+            output.write(output_string)
+
+    return output_string
+
+output_string_3 = translate_to_morse(
+    input_file = "lorem.txt",
+    output_file = "lorem_morse2.txt")
+
