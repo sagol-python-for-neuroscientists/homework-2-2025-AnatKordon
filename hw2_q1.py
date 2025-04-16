@@ -137,22 +137,30 @@ def translate_to_morse(
         Name of output file containing the translated Morse code. Please don't change
         it since it's also hard-coded in the tests file.
     """
-    with open(input_file, "r") as input:
-        content = input.read().upper()
+    try:
+        with open(input_file, "r") as input:
+            content = input.read().upper()
+    except FileNotFoundError:
+        print("such file doesn't exist")
 
-
+    #translating using the str.translate built-in method
     trans_table = str.maketrans(MORSE_CODE)
     translated = content.translate(trans_table)
-    temp_text = re.sub(r'\n\n+', '<break>', translated) #replace double newlines with a placeholder for them to differ from the spaces between words in next line from 
-    temp_text = re.sub(r'\s+', '\n', temp_text)
-    output_string = temp_text.replace('<break>', '\n\n') #put back double newlinws
+    temp_text = re.sub(r'\n\n+', '<break>', translated) #replace double newlines with a placeholder for them to differ from the spaces between words in next line 
+    temp_text = re.sub(r'\s+', '\n', temp_text) #turn spaces to new lines in order to have each word in it's own line
+    output_string = temp_text.replace('<break>', '\n\n') #put back double newlines
 
-    with open(output_file, "w") as output:
+    try:
+        with open(output_file, "w") as output:
             output.write(output_string)
+    except Exception: #every possible error
+            print("couldn't write to file")
+    finally:
+        print("succesfull execution!")
 
     return output_string
-
-output_string_3 = translate_to_morse(
-    input_file = "lorem.txt",
-    output_file = "lorem_morse2.txt")
+if __name__ == __main__:
+    output_string_3 = translate_to_morse(
+        input_file = "lorem.txt",
+        output_file = "lorem_morse2.txt")
 
