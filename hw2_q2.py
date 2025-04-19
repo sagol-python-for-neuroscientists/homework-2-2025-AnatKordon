@@ -38,50 +38,60 @@ def meetup(agent_listing: tuple) -> list:
         DEAD 5
         """
     
-    updated_listing = []
+    healthy_dead_list, meetings_list = spliting_agents(agent_listing)
+    updated_healthy_dead_list, updated_meetings_list = uneven_meetings(healthy_dead_list, meetings_list)
+    updated_listing = updated_healthy_dead_list
+    #print(f"discarded_agents: {healthy_dead_list}, pepole who meet: {meetings_list}")
 
-    for agent1, agent2 in batched(agent_listing, 2): #batched method from itertools groups by unique pairs
-        val1, val2 = agent1.category.value, agent2.category.value #extracting values which i'll check for every condition
-        ##if healthy or dead - there's no encounter so they stay the same
-        if val1 in (2, 5) or val2 in (2, 5) or (val1 == val2 == 1): #check what happens when both are cure 
-            updated_listing.extend([agent1, agent2])
-        elif val1 == 1 ^ val2== 1: #if one and only one is cure - make the other the other one healthier
-            if val1 == 1:
-                updated_listing.extend([
-                agent1,
-                agent2._replace(category=Condition(agent2.category.value + 1))
-            ])
-            if val2 == 1:
-                updated_listing.extend([
-                agent1._replace(category=Condition(agent2.category.value + 1)),
-                agent2
-            ])
-        elif val1 in (3, 4) and val2 in (3,4): # i think it's end and not or though by this stage no one stays.
-            if val1 in (3,4):
-                updated_listing.extend([
-                agent1._replace(category=Condition(agent1.category.value - 1)),
-                agent2._replace(category=Condition(agent2.category.value - 1))
-            ])
-        elif val2 == None: # if the list is uneven
-            updated_listing.extend([agent1])
-        else: 
-            print(f"you didn't think about this case: {agent1}, {agent2}")
+    if len(updated_meetings_list) == 0:
+        return updated_listing
+    else:
+        for agent1, agent2 in batched(updated_meetings_list, 2): 
+        #for agent1, agent2 in zip(agent_listing[::2], agent_listing[1::2]):
+            val1, val2 = agent1.category.value, agent2.category.value #extracting values which i'll check for every condition
+            ##if healthy or dead - there's no encounter so they stay the same
+            if val1 == val2 == 1:
+                updated_listing.extend([agent1, agent2]) #cure and cure don't affect each other
+            elif val1 == 1 or val2 == 1: #if one and only one is cure - make the other the other one healthier
+                if val1 == 1 and val2 > 1:
+                    updated_listing.extend([
+                    agent1,
+                    agent2._replace(category=Condition(val2 - 1))
+                ])
+                elif val2 == 1 and val1 > 1:
+                    updated_listing.extend([
+                    agent1._replace(category=Condition(val1 - 1)),
+                    agent2
+                ]) 
+            elif val1 in (3, 4) and val2 in (3,4): # i think it's end and not or though by this stage no one stays.
+                    updated_listing.extend([
+                    agent1._replace(category=Condition(val1 + 1)),
+                    agent2._replace(category=Condition(val2 + 1))
+                ])
+            elif val2 == None: # if the list is uneven
+                updated_listing.extend([agent1])
+            else: 
+                print(f"you didn't think about this case: {agent1}, {agent2}")
+            #print(f"updated: {updated_listing}")
     return updated_listing
 
 
-data0 = (
-    Agent("Adam", Condition.SICK),
-    Agent("Cure0", Condition.CURE),
-    Agent("Cure1", Condition.CURE),
-    Agent("Bob", Condition.HEALTHY),
-    Agent("Alice", Condition.DEAD),
-    Agent("Charlie", Condition.DYING),
-    Agent("Vaccine", Condition.SICK),
-    Agent("Darlene", Condition.DYING),
-    Agent("Emma", Condition.SICK),
-    Agent("Cure2", Condition.CURE),
-)
+def spliting_agents(agent_listing: tuple):
+    healthy_dead_list = []
+    meetings_list = []
+    for agent in agent_listing:
+        val = agent.category.value
+        if val in (2, 5):
+            healthy_dead_list.append(agent)
+        else: 
+            meetings_list.append(agent)
+    return healthy_dead_list, meetings_list
 
-code_list = meetup(data0)
-print(code_list)
-                 
+def uneven_meetings(healthy_dead_list, meetings_list):
+    for agent in meetings_list:
+        if len(meetings_list) % 2 != 0:
+            healthy_dead_list.append(meetings_list[-1]) #append last agent
+            meetings_list.remove(meetings_list[-1])
+    return healthy_dead_list, meetings_list
+
+
